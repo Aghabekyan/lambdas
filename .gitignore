@@ -1,2 +1,4 @@
 dist/
-terraform/.terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
