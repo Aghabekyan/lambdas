@@ -20,6 +20,26 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_sqs_policy" {
+  name = "lambda-sqs-access"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = "arn:aws:sqs:us-east-1:933754265105:playground-events-*"
+      }
+    ]
+  })
+}
+
 
 # Create one SQS queue per country code
 resource "aws_sqs_queue" "country_queues" {
@@ -38,21 +58,15 @@ resource "aws_lambda_function" "country_lambdas" {
   role          = aws_iam_role.lambda_role.arn
   filename      = "../dist/${each.key}.zip"
   source_code_hash = filebase64sha256("../dist/${each.key}.zip")
+  reserved_concurrent_executions = 2
 }
 
-# resource "aws_sqs_queue" "my_queue" {
-#   name                      = "my-regular-queue"
-#   delay_seconds             = 0
-#   message_retention_seconds = 345600  # 4 days
-#   receive_wait_time_seconds = 0
-#   visibility_timeout_seconds = 30
-# }
-#
-# resource "aws_sqs_queue" "my_queue_x" {
-#   name                      = "my-regular-queue-x"
-#   delay_seconds             = 0
-#   message_retention_seconds = 345600  # 4 days
-#   receive_wait_time_seconds = 0
-#   visibility_timeout_seconds = 30
-# }
+resource "aws_lambda_event_source_mapping" "sqs_triggers" {
+  for_each = toset(var.country_codes)
 
+  event_source_arn = aws_sqs_queue.country_queues[each.key].arn
+  function_name    = aws_lambda_function.country_lambdas[each.key].arn
+
+  batch_size       = 10
+  enabled          = true
+}
