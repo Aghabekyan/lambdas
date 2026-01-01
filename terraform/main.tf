@@ -154,21 +154,78 @@ resource "aws_api_gateway_integration" "country_sqs" {
   type                    = "AWS"
   integration_http_method = "POST"
 
-  # URI points to the SQS queue
+  # Path-style URI for SQS
   uri = "arn:aws:apigateway:${var.aws_region}:sqs:path/${var.aws_account_id}/playground-events-${each.key}"
 
-  # API Gateway role ARN
+  # Role allowing API Gateway to send messages to SQS
   credentials = aws_iam_role.apigw_sqs_role.arn
 
+  # Request template: only Action, Version, MessageBody
   request_templates = {
     "application/json" = <<EOF
 Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($input.body)
 EOF
   }
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
+  depends_on = [aws_sqs_queue.country_queues]
 }
+
+
 
 # Deploy the API
 resource "aws_api_gateway_deployment" "country_api_deploy" {
   depends_on = [aws_api_gateway_integration.country_sqs]
   rest_api_id = aws_api_gateway_rest_api.country_api.id
+}
+
+resource "aws_api_gateway_integration_response" "country_sqs_response" {
+  for_each       = aws_api_gateway_integration.country_sqs
+  rest_api_id    = aws_api_gateway_rest_api.country_api.id
+  resource_id    = each.value.resource_id
+  http_method    = each.value.http_method
+  status_code    = "200"
+
+  response_templates = {
+    "application/json" = "{}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "country_post_response" {
+  for_each       = aws_api_gateway_method.country_post
+  rest_api_id    = aws_api_gateway_rest_api.country_api.id
+  resource_id    = each.value.resource_id
+  http_method    = each.value.http_method
+  status_code    = "200"
+}
+
+
+# Create CloudWatch log groups for each Lambda
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  for_each = aws_lambda_function.country_lambdas
+
+  name              = "/aws/lambda/${each.value.function_name}"
+  retention_in_days = 1  # optional, keep logs for 2 weeks
+}
+
+
+resource "aws_iam_role_policy" "lambda_logging_policy" {
+  name = "lambda-logging"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/*"
+      }
+    ]
+  })
 }
