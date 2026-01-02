@@ -5,9 +5,11 @@ PIP         ?= pip
 RUFF        ?= ruff
 MYPY        ?= mypy
 BANDIT      ?= bandit
+TEST_DIRS   = tests
+PYTEST      ?= pytest
 
 # Where your Python code lives
-SRC_DIRS    = services utils
+SRC_DIRS    = services utils tests
 
 # ---------------- Terraform & Lambdas ----------------
 
@@ -67,3 +69,8 @@ check: lint typecheck security
 lint_fix:
 	@echo "Running Ruff (auto-fix)..."
 	$(RUFF) check --fix $(SRC_DIRS)
+
+.PHONY: test
+test:
+	@echo "Running tests..."
+	$(PYTEST) $(TEST_DIRS)

@@ -9,8 +9,6 @@ def lambda_handler(event: Any, context: Any) -> None:
     for record in event["Records"]:
         body = json.loads(record["body"])
         print("Service", helpers.upper("us"))
-        print("Received:", body)
-        print("event", event)
 
         url = body["webhook_url"]
 
