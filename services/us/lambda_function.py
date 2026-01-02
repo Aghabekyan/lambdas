@@ -1,12 +1,14 @@
 import json
+from typing import Any
+
 import requests
 from utils import helpers
 
 
-def lambda_handler(event, context):
+def lambda_handler(event: Any, context: Any) -> None:
     for record in event["Records"]:
         body = json.loads(record["body"])
-        print("Service", "US")
+        print("Service", helpers.upper("us"))
         print("Received:", body)
         print("event", event)
 

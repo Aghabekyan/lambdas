@@ -1,0 +1,36 @@
+[tool.ruff]
+# Your code layout
+src = ["services", "utils"]
+line-length = 100
+target-version = "py311"  # or py310, py312, etc.
+
+[tool.ruff.lint]
+# What to enable (E/F similar to flake8, I=isort, etc.)
+select = [
+  "E",  # pycodestyle errors
+  "F",  # pyflakes
+  "I",  # import sorting (isort)
+  "B",  # bugbear
+  "UP", # pyupgrade
+  "S",  # security rules (like bandit, basic)
+  "N",  # pep8-naming
+  "BLE" # better exceptions
+]
+
+ignore = [
+  "E501",  # if you don't want Ruff to complain about long lines
+]
+
+[tool.ruff.format]
+# Use Ruff as formatter if you like
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "services:utils"
+disallow_untyped_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
