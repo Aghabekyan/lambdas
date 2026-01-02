@@ -3,10 +3,10 @@ name: CI/CD
 on:
   push:
     branches:
-      - "**"         # run on all branches (master, feature/foo, etc.)
+      - "**"          # run on all branches (master, dev, feature/foo, etc.)
   pull_request:
     branches:
-      - "master"       # run on PRs that target master
+      - "master"      # run on PRs that target master
 
 jobs:
   checks:
@@ -38,11 +38,12 @@ jobs:
       - name: Run tests
         run: make test
 
-  deploy:
-    name: Build & Deploy to AWS
+  deploy-dev:
+    name: Deploy to DEV
     runs-on: ubuntu-latest
     needs: checks
-    if: github.ref == 'refs/heads/master'   # only when master is updated
+    if: github.ref == 'refs/heads/dev'     # only when dev branch is updated
+    environment: dev                       # GitHub "dev" environment
 
     steps:
       - name: Checkout repo
@@ -53,7 +54,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (DEV)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -63,12 +64,34 @@ jobs:
       - name: Build Lambdas
         run: make build_lambdas
 
-      - name: Terraform init
-        working-directory: terraform
-        run: terraform init -input=false
+      - name: Terraform apply (DEV)
+        run: make terraform_apply
 
-      - name: Terraform apply
-        working-directory: terraform
-        run: terraform apply -auto-approve
-        # Or, if your Makefile has terraform_apply at repo root:
-        # run: make terraform_apply
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: checks
+    if: github.ref == 'refs/heads/master'  # only when master is updated
+    environment: prod                      # GitHub "prod" environment
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Configure AWS credentials (PROD)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build Lambdas
+        run: make build_lambdas
+
+      - name: Terraform apply (PROD)
+        run: make terraform_apply

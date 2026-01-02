@@ -2,7 +2,6 @@
 
 provider "aws" {
   region  = "us-east-1"
-  profile = "playground" # name of your AWS CLI profile
 }
 
 resource "aws_iam_role" "lambda_role" {
