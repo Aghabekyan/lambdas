@@ -6,7 +6,7 @@ on:
       - "**"         # run on all branches (main, feature/foo, etc.)
   pull_request:
     branches:
-      - "main"       # run on PRs that target main
+      - "master"       # run on PRs that target main
 
 jobs:
   checks:
