@@ -2,9 +2,11 @@ name: CI/CD
 
 on:
   push:
-    branches: ["*"]
+    branches:
+      - "**"         # run on all branches (main, feature/foo, etc.)
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"       # run on PRs that target main
 
 jobs:
   checks:
@@ -22,11 +24,7 @@ jobs:
 
       - name: Install dev dependencies
         run: |
-          pip install --upgrade pip
-          # OPTION A: if you have [project.optional-dependencies].dev in pyproject.toml
-          pip install -e .[dev]
-          # OPTION B (fallback, if A fails):
-          # pip install ruff mypy bandit pytest
+          pip install -r requirements-dev.txt
 
       - name: Run lint
         run: make lint
@@ -44,7 +42,7 @@ jobs:
     name: Build & Deploy to AWS
     runs-on: ubuntu-latest
     needs: checks
-    if: github.ref == 'refs/heads/main'  # only on main pushes
+    if: github.ref == 'refs/heads/main'   # only when main is updated
 
     steps:
       - name: Checkout repo
@@ -72,5 +70,5 @@ jobs:
       - name: Terraform apply
         working-directory: terraform
         run: terraform apply -auto-approve
-        # If you prefer Makefile:
+        # Or, if your Makefile has terraform_apply at repo root:
         # run: make terraform_apply
