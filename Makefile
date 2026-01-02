@@ -16,6 +16,7 @@ SRC_DIRS    = services utils tests
 .PHONY: terraform_apply
 terraform_apply:
 	@echo "Applying Terraform in ./terraform..."
+	terraform -chdir=./terraform init -input=false
 	terraform -chdir=./terraform apply -auto-approve
 
 .PHONY: build_lambdas
