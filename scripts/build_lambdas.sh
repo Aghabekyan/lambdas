@@ -21,6 +21,10 @@ fi
 declare -A NEW_CHECKSUMS
 
 for service in services/*; do
+  if [ ! -d "$service" ]; then
+      echo "⚪ Skipping non-directory: $(basename "$service")"
+      continue
+  fi
   SERVICE_NAME=$(basename "$service")
   BUILD_DIR="/tmp/$SERVICE_NAME"
 
