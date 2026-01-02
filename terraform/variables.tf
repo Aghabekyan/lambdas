@@ -1,6 +1,6 @@
 variable "country_codes" {
   type    = list(string)
-  default = ["de", "us", "fr", "am"]  # add your countries here
+  default = ["us", "am"]  # add your countries here
 }
 variable "aws_account_id" {
   description = "AWS account ID"
@@ -12,4 +12,9 @@ variable "aws_region" {
   description = "AWS region"
   type        = string
   default     = "us-east-1"
+}
+
+variable "api_stage_name" {
+  type    = string
+  default = "dev"
 }
