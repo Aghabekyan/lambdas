@@ -1,14 +1,19 @@
 name: Deploy DEV
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Checks"]
     branches:
-      - dev
+      - dev          # ✅ only runs when Checks completed on dev
+    types:
+      - completed
 
 jobs:
   deploy-dev:
     name: Deploy to DEV
     runs-on: ubuntu-latest
+    # extra safety: run only if Checks succeeded
+    if: github.event.workflow_run.conclusion == 'success'
     environment: dev
 
     steps:
@@ -31,6 +36,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
+      - name: Terraform init
+        run: make terraform_init
 
       - name: Terraform check
         run: make terraform_check
