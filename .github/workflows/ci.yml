@@ -66,13 +66,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Terraform init
+        run: make terraform_init
+
       - name: Terraform check
         run: make terraform_check
 
       - name: Build Lambdas
         run: make build_lambdas
 
-      - name: Terraform apply (DEV)
+      - name: Terraform apply
         run: make terraform_apply
 
   deploy-prod:
@@ -103,11 +106,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Terraform init
+        run: make terraform_init
+
       - name: Terraform check
         run: make terraform_check
 
       - name: Build Lambdas
         run: make build_lambdas
 
-      - name: Terraform apply (PROD)
+      - name: Terraform apply
         run: make terraform_apply
