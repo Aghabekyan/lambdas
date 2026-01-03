@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict
+from typing import Any
 
 import requests
 from utils import helpers
@@ -7,10 +7,11 @@ from utils import helpers
 
 class ProcessingError(Exception):
     """Custom error to mark message processing failures."""
+
     pass
 
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> None:
+def lambda_handler(event: dict[str, Any], context: Any) -> None:
     # If ANY record fails, we raise and let Lambda fail.
     # SQS will then retry the whole batch.
     for record in event["Records"]:
@@ -24,15 +25,15 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> None:
         except ProcessingError as e:
             # Our "business" failure -> we WANT SQS to retry / DLQ it
             print(f"ProcessingError for message {message_id}: {e}")
-            raise   # ❗ VERY IMPORTANT: make Lambda fail
+            raise  # ❗ VERY IMPORTANT: make Lambda fail
 
         except Exception as e:
             # Unexpected error -> also fail the Lambda
             print(f"Unexpected error for message {message_id}: {e}")
-            raise   # ❗ Also fail so SQS retries / DLQs
+            raise  # ❗ Also fail so SQS retries / DLQs
 
 
-def _process_record(record: Dict[str, Any]) -> None:
+def _process_record(record: dict[str, Any]) -> None:
     # 1) Parse body
     try:
         body = json.loads(record["body"])
@@ -55,8 +56,6 @@ def _process_record(record: Dict[str, Any]) -> None:
 
     # 4) Check HTTP status
     if not (200 <= response.status_code < 300):
-        raise ProcessingError(
-            f"Non-2xx response from {url}: {response.status_code}"
-        )
+        raise ProcessingError(f"Non-2xx response from {url}: {response.status_code}")
 
     print(f"HTTP GET success. Status: {response.status_code}")
