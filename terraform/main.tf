@@ -83,12 +83,19 @@ resource "aws_iam_role_policy" "lambda_sqs_policy" {
   })
 }
 
-
-# Create one SQS queue per country code
 resource "aws_sqs_queue" "country_queues" {
   for_each = toset(var.country_codes)
 
   name = "playground-events-${each.key}"
+
+  # How long Lambda has to process before it gets retried
+  visibility_timeout_seconds = 30
+
+  # After 3 failed receives, move message to DLQ
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.country_dlq[each.key].arn
+    maxReceiveCount     = 3
+  })
 }
 
 # Create one Lambda per country code
@@ -348,3 +355,15 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${each.value.function_name}"
   retention_in_days = 1 # optional, keep logs for 2 weeks
 }
+
+
+# Dead-letter queues for each country
+resource "aws_sqs_queue" "country_dlq" {
+  for_each = toset(var.country_codes)
+
+  name = "playground-events-${each.key}-dlq"
+
+  # Keep failed messages for up to 14 days
+  message_retention_seconds = 1209600
+}
+
