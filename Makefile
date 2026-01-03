@@ -24,6 +24,24 @@ terraform_plan:
 	@echo "Applying Terraform plan"
 	terraform -chdir=./terraform plan
 
+.PHONY: terraform_fmt
+terraform_fmt:
+	@echo "Terraform formatting"
+	terraform -chdir=./terraform fmt
+
+.PHONY: terraform_check
+terraform_check:
+	@echo "▶ Terraform fmt (check only)..."
+	terraform -chdir=./terraform fmt -check
+
+	@echo "▶ Terraform validate..."
+	terraform -chdir=./terraform validate
+
+	@echo "▶ Terraform plan (no changes, just check)..."
+	terraform -chdir=./terraform plan -input=false -detailed-exitcode || true
+
+	@echo "✅ Terraform checks completed (no apply)"
+
 .PHONY: build_lambdas
 build_lambdas:
 	@echo "Building Lambda functions..."
