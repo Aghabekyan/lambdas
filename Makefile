@@ -19,6 +19,11 @@ terraform_apply:
 	terraform -chdir=./terraform init -input=false
 	terraform -chdir=./terraform apply -auto-approve
 
+.PHONY: terraform_plan
+terraform_plan:
+	@echo "Applying Terraform plan"
+	terraform -chdir=./terraform plan
+
 .PHONY: build_lambdas
 build_lambdas:
 	@echo "Building Lambda functions..."
