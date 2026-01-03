@@ -1,6 +1,6 @@
 variable "country_codes" {
   type    = list(string)
-  default = ["us", "am"]  # add your countries here
+  default = ["us", "am", "ru"]  # add your countries here
 }
 variable "aws_account_id" {
   description = "AWS account ID"
